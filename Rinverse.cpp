@@ -87,16 +87,22 @@ void RMatrix::initialize_matrix (int matrix_size) {
 //    Rows:    [start, ..., start+size-1]
 //    Columns: [start, ..., start+size-1]
 void RMatrix::compute_matrix_inverse_recursively (double **R, int start, int size) {
-
     if (size <= leaf_matrix_size) { 
         // Set R = inv(R) using direct algorithm
         invert_upper_triangular_matrix_block (R, start, size);
     } else {
         // Set R11 = inv(R11)
+        #pragma omp task
+	{
         compute_matrix_inverse_recursively (R, start, size/2);
-        // Set R22 = inv(R22)
+        }
+	// Set R22 = inv(R22)
+	#pragma omp task
+	{
         compute_matrix_inverse_recursively (R, start+size/2, size/2);
+	}
 	// Set R12 = -inv(R11)*R12*inv(R22)
+	#pragma omp taskwait
 	compute_off_diagonal_block(R, start, size/2);
     }
 }
@@ -109,6 +115,8 @@ void RMatrix::compute_matrix_inverse_recursively (double **R, int start, int siz
 void RMatrix::compute_off_diagonal_block (double **R, int start, int size) {
     double sum;
     // Rtemp = -inv(R11)*R12
+    #pragma omp parallel num_threads(48) shared(start,size,R) private(sum)
+    #pragma omp for collapse(2)
     for (int i = start; i < start+size; i++) {
         for (int j = start+size; j < start+2*size; j++) {
 	    sum = 0.0;
@@ -117,7 +125,10 @@ void RMatrix::compute_off_diagonal_block (double **R, int start, int size) {
 	    Rtemp[i][j] = sum;
         }
     }
+    
     // R12 = Rtemp*inv(R22)
+    #pragma omp parallel num_threads(48) shared(start,size,R) private(sum)
+    #pragma omp for collapse(2)
     for (int i = start; i < start+size; i++) {
         for (int j = start+size; j < start+2*size; j++) {
 	    sum = 0.0;
@@ -126,12 +137,14 @@ void RMatrix::compute_off_diagonal_block (double **R, int start, int size) {
 	    R[i][j] = sum;
         }
     }
+	
 }
 
 // Compute inverse of a diagonal block of upper triangular matrix R 
 // "in place", i.e., contents of R are overwritten with inverse of R
 void RMatrix::invert_upper_triangular_matrix_block (double **R, int start, int size) {
     double sum;
+    
     for (int j = start+size-1; j >= start;  j--) {
         R[j][j] = 1.0/R[j][j];
 	for (int i = j-1; i >= start; i--) {
@@ -141,7 +154,9 @@ void RMatrix::invert_upper_triangular_matrix_block (double **R, int start, int s
 	    }
 	    R[i][j] = -sum/R[i][i];
 	}
+
     }
+     
 }
 
 // Check if R = Rinv. This routine should be called only
@@ -215,9 +230,9 @@ int main(int argc, char *argv[]) {
 
     // Initialize R
     R.initialize_matrix(matrix_size);
-
+   // R.print_Rinv();
     // Compute inverse of R - standard algorithm
-//    R.compute_matrix_inverse();
+  //  R.compute_matrix_inverse();
 
     if (DEBUG > 2) R.print_R();
     if (DEBUG > 2) R.print_Rinv();
@@ -225,10 +240,11 @@ int main(int argc, char *argv[]) {
     start_time = omp_get_wtime();
 
     // Compute inverse of R - recursive algorithm
+    
     R.compute_matrix_inverse_recursively(R.R, 0, matrix_size);
 
     execution_time = omp_get_wtime() - start_time;
-
+    //R.print_R();
     if (DEBUG > 2) R.print_R();
 
     if ((error = R.compare_inverse()) != 0) {
