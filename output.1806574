@@ -1,0 +1,16 @@
+matrix_size = 12 leaf_matrix_size=1 
+Matrix Size = 4096,  Leaf Matrix Size = 2, Error = 0, Execution Time =  22.1479
+matrix_size = 12 leaf_matrix_size=2 
+Matrix Size = 4096,  Leaf Matrix Size = 4, Error = 0, Execution Time =  23.7016
+matrix_size = 12 leaf_matrix_size=4 
+Matrix Size = 4096,  Leaf Matrix Size = 16, Error = 0, Execution Time =  23.2026
+matrix_size = 12 leaf_matrix_size= 8
+Matrix Size = 4096,  Leaf Matrix Size = 256, Error = 0, Execution Time =  24.5840
+matrix_size = 11 leaf_matrix_size=1 
+Matrix Size = 2048,  Leaf Matrix Size = 2, Error = 0, Execution Time =   1.5095
+matrix_size = 11 leaf_matrix_size=2 
+Matrix Size = 2048,  Leaf Matrix Size = 4, Error = 0, Execution Time =   1.2553
+matrix_size = 11 leaf_matrix_size=4 
+Matrix Size = 2048,  Leaf Matrix Size = 16, Error = 0, Execution Time =   1.1978
+matrix_size = 11 leaf_matrix_size= 8
+Matrix Size = 2048,  Leaf Matrix Size = 256, Error = 0, Execution Time =   1.4745

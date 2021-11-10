@@ -115,7 +115,7 @@ void RMatrix::compute_matrix_inverse_recursively (double **R, int start, int siz
 void RMatrix::compute_off_diagonal_block (double **R, int start, int size) {
     double sum;
     // Rtemp = -inv(R11)*R12
-    #pragma omp parallel num_threads(48) shared(start,size,R) private(sum)
+    #pragma omp parallel num_threads(32) shared(start,size,R) private(sum)
     #pragma omp for collapse(2)
     for (int i = start; i < start+size; i++) {
         for (int j = start+size; j < start+2*size; j++) {
@@ -127,7 +127,7 @@ void RMatrix::compute_off_diagonal_block (double **R, int start, int size) {
     }
     
     // R12 = Rtemp*inv(R22)
-    #pragma omp parallel num_threads(48) shared(start,size,R) private(sum)
+    #pragma omp parallel num_threads(32) shared(start,size,R) private(sum)
     #pragma omp for collapse(2)
     for (int i = start; i < start+size; i++) {
         for (int j = start+size; j < start+2*size; j++) {
